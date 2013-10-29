@@ -1,44 +1,22 @@
 function generateCombGuid() {
-    function LongToByteArray(/*long*/longvalue) {
-        // we want to represent the input as a 8-bytes array
-        var byteArray = [0, 0, 0, 0, 0, 0, 0, 0];
-
-        for (var index = 0; index < byteArray.length; index++) {
-            var abyte = longvalue & 0xff;
-            byteArray[index] = abyte;
-            longvalue = (longvalue - abyte) / 256;
-        }
-        return byteArray;
+  function g(d) {
+    for (var e = [0, 0, 0, 0, 0, 0, 0, 0], a = 0;a < e.length;a++) {
+      var b = d & 255;
+      e[a] = b;
+      d = (d - b) / 256;
     }
-
-    function BytesToHex(bytes) {
-        for (var hex = [], i = 0; i < bytes.length; i++) {
-            hex.push((bytes[i] >>> 4).toString(16));
-            hex.push((bytes[i] & 0xF).toString(16));
-        }
-        return hex.join("");
+    return e;
+  }
+  function h(a) {
+    for (var b = [], c = 0;c < a.length;c++) {
+      b.push((a[c] >>> 4).toString(16)), b.push((a[c] & 15).toString(16));
     }
-
-    //http://stackoverflow.com/a/2117523/173949
-    var guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    guid = guid.substr(0, 24);
-
-    var days = moment().diff(moment([1900, 1, 1]), 'days');
-    var daysBytes = LongToByteArray(days).reverse();
-    daysBytes = daysBytes.slice(daysBytes.length - 2);
-    var daysHex = BytesToHex(daysBytes);
-
-    var msecs = Math.floor(moment().diff(moment().startOf('day')) / 3.333333);
-    var msecsBytes = LongToByteArray(msecs).reverse();
-    msecsBytes = msecsBytes.slice(msecsBytes.length - 4);
-    var msecsHex = BytesToHex(msecsBytes);
-
-    guid = guid + daysHex + msecsHex;
-
-    return guid;
+    return b.join("");
+  }
+  var f = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(a) {
+    var b = 16 * Math.random() | 0;
+    return("x" == a ? b : b & 3 | 8).toString(16);
+  }), f = f.substr(0, 24), a = moment().diff(moment([1900, 1, 1]), "days"), a = g(a).reverse(), a = a.slice(a.length - 2), a = h(a), b = Math.floor(moment().diff(moment().startOf("day")) / 3.333333), b = g(b).reverse(), b = b.slice(b.length - 4), b = h(b);
+  return f + a + b;
 }
+;
