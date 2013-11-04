@@ -4,7 +4,7 @@ JsCombGuid
 A simple JavaScript Comb Guid Generator method for use in JavaScript.
 Especially useful in SPAs.
 
-Big thanks to @thetinomen (https://twitter.com/thetinomen).
+Big thanks to @thetinomen (https://twitter.com/thetinomen) he wrote it...
 
 No guarantees it's perfect! 
 That being said, we have run tests generating 100,000 ids and not having any duplicates.
