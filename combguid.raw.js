@@ -1,4 +1,4 @@
-function generateCombGuid() {
+ function generateCombGuid() {
             function LongToByteArray(/*long*/longvalue) {
                 // we want to represent the input as a 8-bytes array
                 var byteArray = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -42,11 +42,3 @@ function generateCombGuid() {
 
             return guid;
         }
-
-        $(function () {
-            var guids = '';
-            for (var i = 0; i < 25; i++) {
-                guids += generateCombGuid() + '<br />';
-            }
-            $("#guidDiv").html(guids);
-        });
