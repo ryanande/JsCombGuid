@@ -28,7 +28,7 @@
 
             guid = guid.substr(0, 24);
 
-            var days = moment().diff(moment([1900, 1, 1]), 'days');
+            var days = moment().diff(moment([1900, 0, 1]), 'days');
             var daysBytes = LongToByteArray(days).reverse();
             daysBytes = daysBytes.slice(daysBytes.length - 2);
             var daysHex = BytesToHex(daysBytes);
