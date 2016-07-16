@@ -20,6 +20,6 @@ function generateCombGuid() {
             a = Math.floor(a / 16);
             return ("x" == c ? b : b & 7 | 8).toString(16);
         });
-    }().substr(0, 24), a = moment().diff(moment([1900, 1, 1]), "days"), a = f(a).reverse(), a = a.slice(a.length - 2), a = g(a), d = Math.floor(moment().diff(moment().startOf("day")) / 3.333333), d = f(d).reverse(), d = d.slice(d.length - 4), d = g(d);
+    }().substr(0, 24), a = moment().diff(moment([1900, 0, 1]), "days"), a = f(a).reverse(), a = a.slice(a.length - 2), a = g(a), d = Math.floor(moment().diff(moment().startOf("day")) / 3.333333), d = f(d).reverse(), d = d.slice(d.length - 4), d = g(d);
     return h + a + d;
 };
