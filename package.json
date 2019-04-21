@@ -1,7 +1,7 @@
 {
-  "name": "JsCombGuid",
-  "version": "1.0.0",
-  "description": "JsCombGuid\r ==========",
+  "name": "@ryanande/jscombguid",
+  "version": "2.0.1",
+  "description": "JavaScript module used to create comb guids.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,10 +11,13 @@
     "url": "git+https://github.com/ryanande/JsCombGuid.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ryan Anderson",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ryanande/JsCombGuid/issues"
   },
-  "homepage": "https://github.com/ryanande/JsCombGuid#readme"
+  "homepage": "https://github.com/ryanande/JsCombGuid#readme",
+  "dependencies": {
+    "moment": "^2.0.0"
+  }
 }
