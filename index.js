@@ -1,3 +1,5 @@
+var moment = require('moment');
+
 export function generateCombGuid() {
     function f(e) {
         for (var c = [0, 0, 0, 0, 0, 0, 0, 0], b = 0; b < c.length; b++) {
