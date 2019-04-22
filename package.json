@@ -4,7 +4,8 @@
   "description": "JavaScript module used to create comb guids.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint lib/**"
   },
   "repository": {
     "type": "git",
@@ -19,5 +20,8 @@
   "homepage": "https://github.com/ryanande/JsCombGuid#readme",
   "dependencies": {
     "moment": "^2.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0"
   }
 }
