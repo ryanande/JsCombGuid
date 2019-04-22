@@ -2,11 +2,11 @@
   "name": "@ryanande/jscombguid",
   "version": "2.0.1",
   "description": "JavaScript module used to create comb guids.",
-  "main": "lib/index.js",
+  "main": "build/index.js",
   "scripts": {
     "test": "nyc mocha --require babel-core/register",
     "lint": "eslint src/**",
-    "build": "npm run lint && babel ./src -d ./lib"
+    "build": "npm run lint && babel ./src -d ./build"
   },
   "repository": {
     "type": "git",
