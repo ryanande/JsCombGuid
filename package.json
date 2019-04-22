@@ -4,7 +4,7 @@
   "description": "JavaScript module used to create comb guids.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha --require babel-core/register",
+    "test": "nyc mocha --require babel-core/register",
     "lint": "eslint src/**",
     "build": "npm run lint && babel ./src -d ./lib"
   },
@@ -30,6 +30,7 @@
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "eslint": "^5.16.0",
-    "mocha": "^6.1.4"
+    "mocha": "^6.1.4",
+    "nyc": "^14.0.0"
   }
 }
