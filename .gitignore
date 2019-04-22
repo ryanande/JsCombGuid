@@ -42,6 +42,7 @@ package-lock.json
 .env
 .env.test
 .nyc_output
+coverage/
 
 ### VisualStudioCode ###
 .vscode/*
