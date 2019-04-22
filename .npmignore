@@ -1,0 +1,19 @@
+#src
+src/
+
+#tests
+test
+coverage
+
+#build tools
+
+#linters
+.jscsrc
+.jshintrc
+.eslintrc*
+
+.babelrc
+
+#editor settings
+.idea
+.editorconfig
