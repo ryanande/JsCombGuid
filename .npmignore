@@ -19,3 +19,6 @@ coverage
 #logs
 npm-debug.log
 logs/
+
+.nyc_output
+github
