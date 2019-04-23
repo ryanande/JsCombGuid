@@ -1,6 +1,6 @@
 {
   "name": "jscombguid",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "JavaScript module used to create comb guids.",
   "main": "build/index.js",
   "scripts": {
