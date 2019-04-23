@@ -1,6 +1,6 @@
 # JsCombGuid
 
-[![npm version](https://badge.fury.io/js/%40ryanande%2Fjscombguid.svg)](https://badge.fury.io/js/%40ryanande%2Fjscombguid)
+[![npm version](https://badge.fury.io/js/jscombguid.svg)](https://badge.fury.io/js/jscombguid)
 
 A simple JavaScript Comb Guid Generator.
 
