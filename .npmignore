@@ -1,0 +1,24 @@
+#src
+src/
+
+#tests
+test
+coverage
+
+#build tools
+
+#linters
+.eslintrc*
+
+.babelrc
+
+#editor settings
+.idea
+.editorconfig
+
+#logs
+npm-debug.log
+logs/
+
+.nyc_output
+github

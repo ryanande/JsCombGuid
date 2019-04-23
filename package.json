@@ -1,0 +1,42 @@
+{
+  "name": "jscombguid",
+  "version": "1.0.0",
+  "description": "JavaScript module used to create comb guids.",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "nyc mocha --require babel-core/register",
+    "lint": "eslint src/**",
+    "build": "npm run lint && npm run test && babel ./src -d ./build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryanande/JsCombGuid.git"
+  },
+  "keywords": [
+    "guid",
+    "combguid",
+    "guid generator"
+  ],
+  "author": "Ryan Anderson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ryanande/JsCombGuid/issues"
+  },
+  "homepage": "https://github.com/ryanande/JsCombGuid#readme",
+  "dependencies": {
+    "moment": "^2.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^5.16.0",
+    "mocha": "^6.1.4",
+    "nyc": "^14.0.0"
+  },
+  "nyc": {
+    "reporter": [
+      "lcov",
+      "text"
+    ]
+  }
+}
