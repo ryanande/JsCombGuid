@@ -62,6 +62,33 @@ and check out the server site at [http://127.0.0.1:8080](http://127.0.0.1:8080)
 * [eslint](https://eslint.org/) - used for housekeeping and sanity
 * [babel](https://babeljs.io/) - used to bust down the code, we aren't doing anything that would fully constitute this however
 
+## Development
+
+After cloning the repo run;
+
+```bash
+npm install
+```
+
+From that point, there are 3 possible scripts to run;
+
+1. build - runs lint, tests, then babel
+2. lint - runs eslint
+3. test - runs the mocha tests
+
+To start, just run a build;
+
+```bash
+npm run build
+```
+
+And awway you go. This is an overblown project repo, with probably more going on than necessary, however, it is a proof of concept on all aspects of npm package development. That being said, there are a few references which are worth mentioning here;
+
+1. [Developing and Publishing an NPM Package](https://auth0.com/blog/developing-npm-packages/)
+2. [BadgeFury](https://badge.fury.io/)
+3. [How to Build and Publish an NPM Package](https://scotch.io/bar-talk/how-to-build-and-publish-a-npm-package)
+4. [Automate your NPM publish with GitHub Actions](https://medium.com/devopslinks/automate-your-npm-publish-with-github-actions-dfe8059645dd)
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
