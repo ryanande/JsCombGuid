@@ -21,19 +21,19 @@ Pretty simple implementation, simply import the module, and you're off an runnin
 npm install jscombguid
 ```
 
-And cheap example usage;
+And cheap node example usage;
 
 ```javascript
-import generateCombGuid from 'jscombguid'
+const comb = require("jscombguid");
 
-console.log(generateCombGuid());
+console.log(comb.generateCombGuid());
 ```
 
 ## Running the tests
 
 The library source includes some straight forward mocha tests and a duplicate check test which executes 10,000 cycles of guid generation check for duplicates being created. These tests sre located in the test/index.test.js file.
 
-To execute the tests execute the following line of code in your fav tool.
+To execute the tests fire off the following line of code in your fav tool.
 
 ```bash
 npm run test
@@ -41,6 +41,7 @@ npm run test
 
 .nyc_output directory will have the coverage reports outputted to the coverage directory.
 To view this report, and you have `http-server`, a handy basic insta web server, you can instal it and simply run;
+Total overkill for this small package, but a good example of code coverage reporting.
 
 ```bash
 npm i -g http-server
@@ -82,7 +83,7 @@ To start, just run a build;
 npm run build
 ```
 
-And awway you go. This is an overblown project repo, with probably more going on than necessary, however, it is a proof of concept on all aspects of npm package development. That being said, there are a few references which are worth mentioning here;
+And away you go. This is an overblown project repo, with probably more going on than necessary, however, it is a proof of concept on all aspects of npm package development. That being said, there are a few references which are worth mentioning here;
 
 1. [Developing and Publishing an NPM Package](https://auth0.com/blog/developing-npm-packages/)
 2. [BadgeFury](https://badge.fury.io/)
@@ -95,7 +96,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/ryanande/JsCombGuid/tags).
 
 ## License
 
