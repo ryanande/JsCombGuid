@@ -6,7 +6,8 @@
   "scripts": {
     "test": "nyc mocha --require babel-core/register",
     "lint": "eslint src/**",
-    "build": "npm run lint && npm run test && babel ./src -d ./lib"
+    "build": "npm run lint && npm run test && babel ./src -d ./lib",
+    "upgrade-interactive": "npm-check --update"
   },
   "repository": {
     "type": "git",
@@ -29,8 +30,9 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
-    "eslint": "^5.16.0",
+    "eslint": "^6.5.1",
     "mocha": "^6.1.4",
+    "npm-check": "^5.9.0",
     "nyc": "^14.0.0"
   },
   "nyc": {
