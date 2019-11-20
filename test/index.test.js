@@ -1,5 +1,5 @@
 import assert from "assert";
-import { generateCombGuid } from "../src/index";
+import generateCombGuid from "../src/index";
 
 describe("Array", () => {
   describe("generateCombGuid()", () => {
