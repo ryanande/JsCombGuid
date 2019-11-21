@@ -1,13 +1,16 @@
 {
   "name": "jscombguid",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "JavaScript module used to create comb guids.",
   "main": "lib/index.js",
+  "types": "lib/index",
   "scripts": {
+    "clean": "rimraf lib",
     "test": "nyc mocha --require babel-core/register",
     "lint": "eslint src/**",
-    "build": "npm run lint && npm run test && babel ./src -d ./lib",
+    "build": "npm run clean && npm run lint && npm run test && babel ./src -d ./lib",
     "upgrade-interactive": "npm-check --update",
+    "prepublish": "npm run build",
     "trypublish": "npm publish || true"
   },
   "repository": {
