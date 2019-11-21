@@ -1,6 +1,6 @@
 import moment from "moment";
 
-export function generateCombGuid() {
+module.exports =  function generateCombGuid() {
     function f(e) {
         for (var c = [0, 0, 0, 0, 0, 0, 0, 0], b = 0; b < c.length; b++) {
             var a = e & 255;
@@ -25,5 +25,3 @@ export function generateCombGuid() {
     }().substr(0, 24), a = moment().diff(moment([1900, 0, 1]), "days"), a = f(a).reverse(), a = a.slice(a.length - 2), a = g(a), d = Math.floor(moment().diff(moment().startOf("day")) / 3.333333), d = f(d).reverse(), d = d.slice(d.length - 4), d = g(d);
     return h + a + d;
 }
-
-module.exports = generateCombGuid;
