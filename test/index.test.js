@@ -38,6 +38,6 @@ describe("Array", () => {
         arr.filter((item, index) => arr.indexOf(item) != index);
 
       assert.equal(findDuplicates(arr), false);
-    }).timeout(45000);
+    }).timeout(90000);
   });
 });
