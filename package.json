@@ -31,7 +31,6 @@
     "url": "https://github.com/ryanande/JsCombGuid/issues"
   },
   "homepage": "http://ryanande.github.io/JsCombGuid/",
-  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.23.0",
     "@babel/core": "^7.23.0",
@@ -39,11 +38,11 @@
     "@babel/register": "^7.23.0",
     "@eslint/js": "^9.0.0",
     "eslint": "^9.0.0",
-    "globals": "^14.0.0",
-    "mocha": "^10.3.0",
+    "globals": "^16.1.0",
+    "mocha": "^11.2.2",
     "npm-check": "^6.0.1",
-    "nyc": "^15.1.0",
-    "rimraf": "^5.0.5"
+    "nyc": "^17.1.0",
+    "rimraf": "^6.0.1"
   },
   "nyc": {
     "reporter": [
