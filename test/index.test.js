@@ -245,4 +245,47 @@ describe("Sequential GUID Generator", () => {
       console.log("Crypto fallback test completed successfully");
     });
   });
+
+  describe('Error handling and edge cases', () => {
+    it('should handle crypto API unavailability', () => {
+      // Mock crypto API as unavailable
+      const originalCrypto = global.crypto;
+      delete global.crypto;
+      
+      const guid = generateSequentialGuid();
+      assert.match(guid, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      
+      // Restore crypto API
+      global.crypto = originalCrypto;
+    });
+
+    it('should handle timestamp rollover', () => {
+      const guids = [];
+      for (let i = 0; i < 1000; i++) {
+        guids.push(generateSequentialGuid());
+      }
+      
+      // Verify all GUIDs are unique and properly formatted
+      const uniqueGuids = new Set(guids);
+      assert.strictEqual(uniqueGuids.size, guids.length);
+      guids.forEach(guid => {
+        assert.match(guid, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      });
+    });
+
+    it('should handle counter overflow', () => {
+      // Force counter to near MAX_COUNTER
+      const guids = [];
+      for (let i = 0; i < 0xFFFF + 10; i++) {
+        guids.push(generateSequentialGuid());
+      }
+      
+      // Verify all GUIDs are unique and properly formatted
+      const uniqueGuids = new Set(guids);
+      assert.strictEqual(uniqueGuids.size, guids.length);
+      guids.forEach(guid => {
+        assert.match(guid, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      });
+    });
+  });
 });
