@@ -1,16 +1,19 @@
 {
   "name": "jscombguid",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "JavaScript module used to create comb guids.",
   "main": "lib/index.js",
   "types": "lib/index",
+  "type": "module",
   "scripts": {
     "clean": "rimraf lib",
-    "test": "nyc mocha --require babel-core/register",
     "lint": "eslint src/**",
-    "build": "npm run clean && npm run lint && npm run test && babel ./src -d ./lib",
+    "test": "nyc mocha --require @babel/register",
+    "compile": "babel ./src -d ./lib",
+    "verify": "npm run lint && npm run test",
+    "build": "npm run clean && npm run lint && npm run compile && npm run test",
+    "prepublishOnly": "npm run build",
     "upgrade-interactive": "npm-check --update",
-    "prepublish": "npm run build",
     "trypublish": "npm publish || true"
   },
   "repository": {
@@ -28,16 +31,19 @@
     "url": "https://github.com/ryanande/JsCombGuid/issues"
   },
   "homepage": "http://ryanande.github.io/JsCombGuid/",
-  "dependencies": {
-    "moment": "^2.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "eslint": "^8.26.0",
-    "mocha": "^10.1.0",
+    "@babel/cli": "^7.23.0",
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "@babel/register": "^7.23.0",
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^14.0.0",
+    "mocha": "^10.3.0",
     "npm-check": "^6.0.1",
-    "nyc": "^15.1.0"
+    "nyc": "^15.1.0",
+    "rimraf": "^5.0.5"
   },
   "nyc": {
     "reporter": [
