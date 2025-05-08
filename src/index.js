@@ -28,15 +28,12 @@ const generateSequentialGuid = (() => {
   const MAX_COUNTER = 0xFFFF;
   
   // Cache frequently used values
-  const EPOCH_1900 = new Date('1900-01-01T00:00:00.000Z').getTime();
-  const MS_PER_DAY = 24 * 60 * 60 * 1000 * 1000;
   const BYTE_ARRAY = new Uint8Array(16);
   const HEX_CHARS = '0123456789abcdef';
   
   // Pre-allocate arrays and objects for better performance
   const bytes = new Array(8);
   const uuidParts = new Array(5);
-  const randomBytes = new Uint8Array(6);
   
   // Cache for the last timestamp to ensure monotonicity
   let lastTimestamp = 0;
@@ -44,7 +41,6 @@ const generateSequentialGuid = (() => {
 
   // Pre-compute some values for better performance
   const timestampCache = new Map();
-  let lastTimestampKey = 0;
 
   /**
    * Converts a number to a byte array representation.
