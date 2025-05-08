@@ -23,9 +23,11 @@ const generateSequentialGuid = (() => {
   const bytes = new Uint8Array(16);
 
   return () => {
-    // Get timestamp and ensure monotonicity
-    const [seconds, nanoseconds] = process.hrtime();
-    let timestamp = seconds * 1000000 + Math.floor(nanoseconds / 1000);
+    // Get current time in milliseconds since Unix epoch
+    const now = Date.now();
+    let timestamp = now; // Keep in milliseconds
+    
+    // Ensure timestamp is monotonic
     if (timestamp <= lastTimestamp) {
       timestamp = lastTimestamp + 1;
     }
@@ -47,14 +49,27 @@ const generateSequentialGuid = (() => {
       }
     }
 
-    // Set version (4) and variant bits (10xx)
+    // Set version (4) and variant bits (10xx) first
     bytes[6] = (bytes[6] & 0x0F) | 0x40;  // Version 4
     bytes[8] = (bytes[8] & 0x3F) | 0x80;  // Variant 1
 
-    // Embed timestamp in the first 6 bytes
-    for (let i = 0; i < 6; i++) {
-      bytes[i] = (timestamp >> ((5 - i) * 8)) & 0xFF;
-    }
+    // Embed timestamp in first 6 bytes
+    // We use a custom epoch (2024-01-01) to keep timestamps smaller
+    const CUSTOM_EPOCH = 1704067200000; // 2024-01-01 in milliseconds
+    const relativeTimestamp = Math.max(0, timestamp - CUSTOM_EPOCH);
+    
+    // Convert relative timestamp to bytes, ensuring we don't exceed 48 bits
+    const timestampLower48 = relativeTimestamp & 0xFFFFFFFFFFFF;
+    bytes[0] = (timestampLower48 >> 40) & 0xFF;
+    bytes[1] = (timestampLower48 >> 32) & 0xFF;
+    bytes[2] = (timestampLower48 >> 24) & 0xFF;
+    bytes[3] = (timestampLower48 >> 16) & 0xFF;
+    bytes[4] = (timestampLower48 >> 8) & 0xFF;
+    bytes[5] = timestampLower48 & 0xFF;
+
+    // Ensure the timestamp bytes don't interfere with version and variant bits
+    bytes[6] = (bytes[6] & 0x0F) | 0x40;  // Version 4
+    bytes[8] = (bytes[8] & 0x3F) | 0x80;  // Variant 1
 
     // Convert to hex string
     let result = '';

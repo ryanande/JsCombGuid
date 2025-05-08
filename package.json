@@ -7,11 +7,13 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf lib",
-    "test": "nyc mocha --require @babel/register",
     "lint": "eslint src/**",
-    "build": "npm run clean && npm run lint && npm run test && babel ./src -d ./lib",
+    "test": "nyc mocha --require @babel/register",
+    "compile": "babel ./src -d ./lib",
+    "verify": "npm run lint && npm run test",
+    "build": "npm run clean && npm run lint && npm run compile && npm run test",
+    "prepublishOnly": "npm run build",
     "upgrade-interactive": "npm-check --update",
-    "prepublish": "npm run build",
     "trypublish": "npm publish || true"
   },
   "repository": {
