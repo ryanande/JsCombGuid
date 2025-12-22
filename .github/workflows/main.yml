@@ -32,6 +32,4 @@ jobs:
       
       - name: Publish to NPM
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: npm run trypublish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 
+        run: npm publish --provenance # Recommended for increased supply chain security
