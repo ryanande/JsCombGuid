@@ -14,7 +14,9 @@
     "build": "npm run clean && npm run lint && npm run compile && npm run test",
     "prepublishOnly": "npm run build",
     "upgrade-interactive": "ncu --interactive",
-    "trypublish": "npm publish || true"
+    "trypublish": "npm publish || true",
+    "changeset": "changeset",
+    "version-packages": "changeset version"
   },
   "repository": {
     "type": "git",
@@ -32,6 +34,8 @@
   },
   "homepage": "http://ryanande.github.io/JsCombGuid/",
   "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@changesets/cli": "^2.27.9",
     "@babel/cli": "^7.23.0",
     "@babel/core": "^7.23.0",
     "@babel/preset-env": "^7.23.0",
