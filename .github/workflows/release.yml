@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    types: [opened, synchronize, labeled]
+    types: [opened, synchronize, closed]
 
 permissions:
   contents: write
@@ -12,21 +12,15 @@ permissions:
   id-token: write
 
 jobs:
-  auto-version-and-publish:
+  create-version-pr:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      !contains(github.event.head_commit.message, 'chore: bump version')
     steps:
-      - name: Check if should skip
-        id: skip
-        run: |
-          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]] || [[ "${{ github.event.head_commit.message }}" == *"chore: bump version"* ]]; then
-            echo "should_skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_skip=false" >> $GITHUB_OUTPUT
-          fi
-      
       - uses: actions/checkout@v4
-        if: steps.skip.outputs.should_skip != 'true'
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -35,82 +29,46 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Auto-version patch
+      - name: Bump version
+        id: version
         run: |
           npm version patch --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
-          echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
-          git commit -m "chore: bump version to $VERSION [skip ci]"
-          git push
-
-      - name: Create and push tag
-        if: steps.skip.outputs.should_skip != 'true'
-        id: tag
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          git tag -a "v$VERSION" -m "Release v$VERSION"
-          git push origin "v$VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create GitHub Release
-        if: steps.skip.outputs.should_skip != 'true'
-        uses: actions/github-script@v7
+      - name: Create version PR
+        uses: peter-evans/create-pull-request@v6
         with:
-          script: |
-            const version = '${{ steps.tag.outputs.version }}';
-            const tagName = `v${version}`;
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/version-bump-${{ steps.version.outputs.version }}
+          title: "chore: bump version to ${{ steps.version.outputs.version }}"
+          body: |
+            Automated version bump to **${{ steps.version.outputs.version }}**
             
-            // Get the latest commits for release notes
-            const { data: commits } = await github.rest.repos.listCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 10
-            });
-            
-            // Generate release notes from recent commits (excluding version bumps)
-            const releaseNotes = commits
-              .filter(commit => !commit.commit.message.includes('chore: bump version'))
-              .slice(0, 5)
-              .map(commit => `- ${commit.commit.message.split('\n')[0]}`)
-              .join('\n');
-            
-            const body = `## Changes\n\n${releaseNotes || 'See commit history for details.'}`;
-            
-            await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: tagName,
-              name: `Release ${tagName}`,
-              body: body,
-              draft: false,
-              prerelease: false
-            });
+            This PR will be automatically merged to trigger the release process.
+          commit-message: "chore: bump version to ${{ steps.version.outputs.version }}"
+          labels: |
+            automated
+            version-bump
 
-  auto-merge-version:
+  auto-merge-version-pr:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'pull_request' &&
-      github.event.pull_request.title == 'chore: version packages' &&
+      startsWith(github.event.pull_request.title, 'chore: bump version to') &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'auto-merge'))
+      (github.event.action == 'opened' || github.event.action == 'synchronize')
     steps:
-      - name: Wait for status checks
+      - name: Wait for checks and merge
         uses: actions/github-script@v7
-        id: wait
         with:
           script: |
-            const maxWait = 300; // 5 minutes
-            const checkInterval = 10; // 10 seconds
+            const maxWait = 300;
+            const checkInterval = 10;
             let waited = 0;
             
             while (waited < maxWait) {
@@ -121,25 +79,84 @@ jobs:
               });
               
               if (pr.mergeable === true && pr.mergeable_state === 'clean') {
-                console.log('PR is ready to merge');
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  merge_method: 'squash'
+                });
                 return;
               }
               
-              console.log(`Waiting for checks... (${waited}s)`);
               await new Promise(resolve => setTimeout(resolve, checkInterval * 1000));
               waited += checkInterval;
             }
             
             throw new Error('Timeout waiting for PR to be mergeable');
 
-      - name: Auto-merge version PR
+  create-tag-and-release:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      startsWith(github.event.pull_request.title, 'chore: bump version to') &&
+      github.event.pull_request.merged == true
+    steps:
+      - name: Extract version from PR title
+        id: version
+        run: |
+          VERSION=$(echo "${{ github.event.pull_request.title }}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create tag
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.pulls.merge({
+            const version = '${{ steps.version.outputs.version }}';
+            const tagName = `v${version}`;
+            
+            // Create tag via API (doesn't require checkout)
+            await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              merge_method: 'squash'
+              ref: `refs/tags/${tagName}`,
+              sha: context.payload.pull_request.merge_commit_sha
             });
 
+      - name: Generate release notes
+        id: release-notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: commits } = await github.rest.repos.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 20,
+              sha: 'main'
+            });
+            
+            const notes = commits
+              .filter(c => 
+                !c.commit.message.includes('chore: bump version') &&
+                !c.commit.message.includes('[skip ci]')
+              )
+              .slice(0, 10)
+              .map(c => `- ${c.commit.message.split('\n')[0]}`)
+              .join('\n');
+            
+            core.setOutput('body', notes || 'See commit history for details.');
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          body: |
+            ## What's Changed
+            
+            ${{ steps.release-notes.outputs.body }}
+            
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.version.outputs.version }}^...v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
