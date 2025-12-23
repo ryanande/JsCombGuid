@@ -9,30 +9,53 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
-  version-packages:
+  auto-version-and-publish:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - name: Check if should skip
+        id: skip
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]] || [[ "${{ github.event.head_commit.message }}" == *"chore: bump version"* ]]; then
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+      
       - uses: actions/checkout@v4
+        if: steps.skip.outputs.should_skip != 'true'
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Create or update version PR
-        uses: changesets/action@v1
-        with:
-          version: npm run version-packages
-          commit: "chore: version packages"
-          title: "chore: version packages"
+      - name: Auto-version patch
+        run: |
+          npm version patch --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $VERSION [skip ci]"
+          git push
+
+      - name: Create and push tag
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -82,45 +105,4 @@ jobs:
               pull_number: context.payload.pull_request.number,
               merge_method: 'squash'
             });
-
-  tag-on-version:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Check if version commit
-        id: check
-        run: |
-          if [[ "${{ github.event.head_commit.message }}" == *"chore: version packages"* ]]; then
-            echo "is_version=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_version=false" >> $GITHUB_OUTPUT
-          fi
-      
-      - uses: actions/checkout@v4
-        if: steps.check.outputs.is_version == 'true'
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        if: steps.check.outputs.is_version == 'true'
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Install dependencies
-        if: steps.check.outputs.is_version == 'true'
-        run: npm ci
-
-      - name: Create tags from Changesets
-        if: steps.check.outputs.is_version == 'true'
-        run: npx changeset tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push tags
-        if: steps.check.outputs.is_version == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git push --follow-tags
 
