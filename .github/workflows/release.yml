@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version-packages:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create or update version PR
+        uses: changesets/action@v1
+        with:
+          version: npm run version-packages
+          commit: "chore: version packages"
+          title: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-merge-version:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.title == 'chore: version packages' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'auto-merge'))
+    steps:
+      - name: Wait for status checks
+        uses: actions/github-script@v7
+        id: wait
+        with:
+          script: |
+            const maxWait = 300; // 5 minutes
+            const checkInterval = 10; // 10 seconds
+            let waited = 0;
+            
+            while (waited < maxWait) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+              });
+              
+              if (pr.mergeable === true && pr.mergeable_state === 'clean') {
+                console.log('PR is ready to merge');
+                return;
+              }
+              
+              console.log(`Waiting for checks... (${waited}s)`);
+              await new Promise(resolve => setTimeout(resolve, checkInterval * 1000));
+              waited += checkInterval;
+            }
+            
+            throw new Error('Timeout waiting for PR to be mergeable');
+
+      - name: Auto-merge version PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              merge_method: 'squash'
+            });
+
+  tag-on-version:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Check if version commit
+        id: check
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" == *"chore: version packages"* ]]; then
+            echo "is_version=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_version=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.is_version == 'true'
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.is_version == 'true'
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: steps.check.outputs.is_version == 'true'
+        run: npm ci
+
+      - name: Create tags from Changesets
+        if: steps.check.outputs.is_version == 'true'
+        run: npx changeset tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push tags
+        if: steps.check.outputs.is_version == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push --follow-tags
+
