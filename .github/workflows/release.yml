@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    types: [opened, synchronize, labeled, closed]
+    types: [opened, synchronize, closed]
 
 permissions:
   contents: write
@@ -63,13 +63,12 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       (github.event.action == 'opened' || github.event.action == 'synchronize')
     steps:
-      - name: Wait for status checks
+      - name: Wait for checks and merge
         uses: actions/github-script@v7
-        id: wait
         with:
           script: |
-            const maxWait = 300; // 5 minutes
-            const checkInterval = 10; // 10 seconds
+            const maxWait = 300;
+            const checkInterval = 10;
             let waited = 0;
             
             while (waited < maxWait) {
@@ -80,27 +79,20 @@ jobs:
               });
               
               if (pr.mergeable === true && pr.mergeable_state === 'clean') {
-                console.log('PR is ready to merge');
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  merge_method: 'squash'
+                });
                 return;
               }
               
-              console.log(`Waiting for checks... (${waited}s)`);
               await new Promise(resolve => setTimeout(resolve, checkInterval * 1000));
               waited += checkInterval;
             }
             
             throw new Error('Timeout waiting for PR to be mergeable');
-
-      - name: Auto-merge version PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.pulls.merge({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              merge_method: 'squash'
-            });
 
   create-tag-and-release:
     runs-on: ubuntu-latest
@@ -109,53 +101,32 @@ jobs:
       startsWith(github.event.pull_request.title, 'chore: bump version to') &&
       github.event.pull_request.merged == true
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
       - name: Extract version from PR title
         id: version
         run: |
           VERSION=$(echo "${{ github.event.pull_request.title }}" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
 
-      - name: Create and push tag
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v$VERSION" -m "Release v$VERSION"
-          git push origin "v$VERSION"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
+      - name: Create tag
         uses: actions/github-script@v7
         with:
           script: |
             const version = '${{ steps.version.outputs.version }}';
             const tagName = `v${version}`;
             
-            // Get commits since last tag
-            const { data: tags } = await github.rest.repos.listTags({
+            // Create tag via API (doesn't require checkout)
+            await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              per_page: 2
+              ref: `refs/tags/${tagName}`,
+              sha: context.payload.pull_request.merge_commit_sha
             });
-            
-            let since = null;
-            if (tags.length > 1) {
-              since = tags[1].commit.sha;
-            }
-            
-            // Get commits for release notes
+
+      - name: Generate release notes
+        id: release-notes
+        uses: actions/github-script@v7
+        with:
+          script: |
             const { data: commits } = await github.rest.repos.listCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -163,28 +134,29 @@ jobs:
               sha: 'main'
             });
             
-            // Filter out version bump commits
-            const releaseNotes = commits
-              .filter(commit => 
-                !commit.commit.message.includes('chore: bump version') &&
-                !commit.commit.message.includes('[skip ci]')
+            const notes = commits
+              .filter(c => 
+                !c.commit.message.includes('chore: bump version') &&
+                !c.commit.message.includes('[skip ci]')
               )
               .slice(0, 10)
-              .map(commit => {
-                const message = commit.commit.message.split('\n')[0];
-                const author = commit.commit.author.name;
-                return `- ${message} (${author})`;
-              })
+              .map(c => `- ${c.commit.message.split('\n')[0]}`)
               .join('\n');
             
-            const body = `## What's Changed\n\n${releaseNotes || 'See commit history for details.'}\n\n**Full Changelog**: ${tags[0] ? `https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${tags[1] ? tags[1].name : 'HEAD'}...${tagName}` : `https://github.com/${context.repo.owner}/${context.repo.repo}/commits/${tagName}`}`;
+            core.setOutput('body', notes || 'See commit history for details.');
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          body: |
+            ## What's Changed
             
-            await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: tagName,
-              name: `Release ${tagName}`,
-              body: body,
-              draft: false,
-              prerelease: false
-            });
+            ${{ steps.release-notes.outputs.body }}
+            
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ steps.version.outputs.version }}^...v${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
