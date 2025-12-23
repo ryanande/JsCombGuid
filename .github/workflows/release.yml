@@ -34,9 +34,6 @@ jobs:
         if: steps.check.outputs.should_skip != 'true'
         with:
           fetch-depth: 0
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         if: steps.check.outputs.should_skip != 'true'
@@ -49,18 +46,30 @@ jobs:
         if: steps.check.outputs.should_skip != 'true'
         run: npm ci
 
-      - name: Get current version and bump
+      - name: Get latest published version and bump
         if: steps.check.outputs.should_skip != 'true'
         id: version
         run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          # Try to get latest published version from npm
+          PUBLISHED_VERSION=$(npm view jscombguid version 2>/dev/null || echo "")
+          
+          # If not published yet, use package.json version
+          if [ -z "$PUBLISHED_VERSION" ]; then
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            echo "Package not published yet, using package.json version: $CURRENT_VERSION"
+          else
+            CURRENT_VERSION="$PUBLISHED_VERSION"
+            echo "Latest published version: $CURRENT_VERSION"
+          fi
+          
+          # Bump patch version
           NEW_VERSION=$(node -e "
             const v = '$CURRENT_VERSION'.split('.');
             v[2] = String(parseInt(v[2]) + 1);
             console.log(v.join('.'));
           ")
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Current: $CURRENT_VERSION → New: $NEW_VERSION"
+          echo "Bumping from $CURRENT_VERSION → $NEW_VERSION"
 
       - name: Update package.json version (in memory only)
         if: steps.check.outputs.should_skip != 'true'
