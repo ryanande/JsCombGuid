@@ -4,16 +4,17 @@
 [![Build Status](https://github.com/ryanande/JsCombGuid/workflows/CI/badge.svg)](https://github.com/ryanande/JsCombGuid/actions)
 [![Coverage Status](https://coveralls.io/repos/github/ryanande/JsCombGuid/badge.svg?branch=master)](https://coveralls.io/github/ryanande/JsCombGuid?branch=master)
 
-A high-performance JavaScript Sequential GUID Generator that creates sortable, unique identifiers with microsecond precision.
+A high-performance JavaScript Sequential GUID Generator that creates sortable, unique identifiers with microsecond precision. Perfect for databases, distributed systems, and any scenario where you need sortable, unique IDs.
 
 ## Features
 
 - **High Performance**: Optimized for speed with minimal memory allocations
 - **Microsecond Precision**: Uses high-resolution timestamps for better uniqueness
-- **Sortable**: GUIDs are chronologically sortable
+- **Sortable**: GUIDs are chronologically sortable by creation time
 - **Collision Resistant**: Multiple entropy sources and a counter for high-frequency generation
 - **RFC4122 Compliant**: Generates valid UUID v4 format
-- **Zero Dependencies**: Only requires moment.js for date calculations
+- **Zero Dependencies**: Pure JavaScript with no external dependencies
+- **TypeScript Support**: Includes TypeScript type definitions
 
 ## Installation
 
@@ -22,6 +23,8 @@ npm install jscombguid
 ```
 
 ## Usage
+
+### ES Modules (Recommended)
 
 ```javascript
 import generateSequentialGuid from 'jscombguid';
@@ -32,6 +35,36 @@ console.log(guid); // e.g., "550e8400-e29b-41d4-a716-446655440000"
 
 // Generate multiple GUIDs
 const guids = Array.from({ length: 10 }, () => generateSequentialGuid());
+```
+
+### CommonJS
+
+```javascript
+const generateSequentialGuid = require('jscombguid');
+
+const guid = generateSequentialGuid();
+```
+
+### TypeScript
+
+```typescript
+import generateSequentialGuid from 'jscombguid';
+
+const guid: string = generateSequentialGuid();
+```
+
+### Use Cases
+
+```javascript
+// Database primary keys
+const userId = generateSequentialGuid();
+
+// Sortable transaction IDs
+const transactionIds = Array.from({ length: 100 }, () => generateSequentialGuid());
+// These can be sorted chronologically!
+
+// Distributed system identifiers
+const sessionId = generateSequentialGuid();
 ```
 
 ## Performance
@@ -57,6 +90,20 @@ This combination ensures:
 - High uniqueness
 - Microsecond precision
 - Collision resistance
+
+## API
+
+### `generateSequentialGuid()`
+
+Generates a sequential GUID string.
+
+**Returns:** `string` - A 36-character GUID in UUID v4 format
+
+**Example:**
+```javascript
+const guid = generateSequentialGuid();
+// "550e8400-e29b-41d4-a716-446655440000"
+```
 
 ## Benchmarks
 
