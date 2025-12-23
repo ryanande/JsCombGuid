@@ -32,7 +32,3 @@ jobs:
       
       - name: Build and Test
         run: npm run build
-      
-      - name: Publish to NPM
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: npm publish
